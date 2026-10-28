@@ -1,6 +1,6 @@
 {
     "cmake.sourceDirectory": "${workspaceFolder}/lcbd",
-    "cmake.buildDirectory": "${userHome}/lcbd-build",
+    "cmake.buildDirectory": "${workspaceFolder}/lcbd-build",
     "cmake.cmakePath": "cmake",
     "cmake.configureArgs": [],
     "cmake.configureOnOpen": true,

@@ -1,0 +1,497 @@
+# initial state: (raw 0x104, all flags 1, p20 = p28 = 0, station angle 0)
+# status
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+rx 10 ack 0 tx 10 00
+rx 11 ack 0 tx 10 00
+rx 12 ack 0 tx 10 00
+rx 13 ack 0 tx 10 00
+rx 14 ack 0 tx 10 00
+rx 15 ack 0 tx 10 00
+rx 16 ack 0 tx 10 00
+rx 17 ack 0 tx 10 00
+rx 18 ack 0 tx 10 00
+rx 19 ack 0 tx 10 00
+rx 1a ack 0 tx 10 00
+rx 1b ack 0 tx 10 00
+rx 1c ack 0 tx 10 00
+rx 1d ack 0 tx 10 00
+rx 1e ack 0 tx 10 00
+rx 1f ack 0 tx 10 00
+# parameter block 5: p20 = 1000, p28 = 2000, p30 = 0
+rx 25 ack 1 tx
+rx e8 ack 1 tx
+rx 03 ack 1 tx
+rx d0 ack 1 tx
+rx 07 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 25
+# parameter block 6: set angle 90.0
+rx 26 ack 1 tx
+rx 84 ack 1 tx
+rx 03 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 26
+# parameter block 0
+rx 20 ack 1 tx
+rx 4e ack 1 tx
+rx 4c ack 1 tx
+rx 52 ack 1 tx
+rx 2d ack 1 tx
+rx 44 ack 1 tx
+rx 4e ack 1 tx
+rx 02 ack 1 tx
+rx 00 ack 1 tx 20
+angle 180 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 13 e8
+rx 12 ack 0 tx 13 e8
+rx 13 ack 0 tx 13 e8
+rx 14 ack 0 tx 13 e8
+rx 15 ack 0 tx 13 e8
+rx 16 ack 0 tx 13 e8
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 179.75 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 13 ea
+rx 12 ack 0 tx 13 ea
+rx 13 ack 0 tx 13 ea
+rx 14 ack 0 tx 13 ea
+rx 15 ack 0 tx 13 ea
+rx 16 ack 0 tx 13 ea
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 150 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 15 35
+rx 12 ack 0 tx 15 35
+rx 13 ack 0 tx 15 35
+rx 14 ack 0 tx 15 35
+rx 15 ack 0 tx 15 35
+rx 16 ack 0 tx 15 35
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 135 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 15 dc
+rx 12 ack 0 tx 15 dc
+rx 13 ack 0 tx 15 dc
+rx 14 ack 0 tx 15 dc
+rx 15 ack 0 tx 15 dc
+rx 16 ack 0 tx 15 dc
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 132.664978 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 15 f5
+rx 12 ack 0 tx 15 f5
+rx 13 ack 0 tx 15 f5
+rx 14 ack 0 tx 15 f5
+rx 15 ack 0 tx 15 f5
+rx 16 ack 0 tx 15 f5
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 120 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 16 82
+rx 12 ack 0 tx 16 82
+rx 13 ack 0 tx 16 82
+rx 14 ack 0 tx 16 82
+rx 15 ack 0 tx 16 82
+rx 16 ack 0 tx 16 82
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 90 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 17 d0
+rx 12 ack 0 tx 17 d0
+rx 13 ack 0 tx 17 d0
+rx 14 ack 0 tx 17 d0
+rx 15 ack 0 tx 17 d0
+rx 16 ack 0 tx 17 d0
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 89.1667328 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 17 d9
+rx 12 ack 0 tx 17 d9
+rx 13 ack 0 tx 17 d9
+rx 14 ack 0 tx 17 d9
+rx 15 ack 0 tx 17 d9
+rx 16 ack 0 tx 17 d9
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 45 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 19 c4
+rx 12 ack 0 tx 19 c4
+rx 13 ack 0 tx 19 c4
+rx 14 ack 0 tx 19 c4
+rx 15 ack 0 tx 19 c4
+rx 16 ack 0 tx 19 c4
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 20 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 1a d9
+rx 12 ack 0 tx 1a d9
+rx 13 ack 0 tx 1a d9
+rx 14 ack 0 tx 1a d9
+rx 15 ack 0 tx 1a d9
+rx 16 ack 0 tx 1a d9
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 0 1 1 1
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 1b b8
+rx 12 ack 0 tx 1b b8
+rx 13 ack 0 tx 1b b8
+rx 14 ack 0 tx 1b b8
+rx 15 ack 0 tx 1b b8
+rx 16 ack 0 tx 1b b8
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+angle 89.1667328 0 0 1
+# station never had both legs valid
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 13 e8
+rx 12 ack 0 tx 17 d9
+rx 13 ack 0 tx 17 d9
+rx 14 ack 0 tx 17 d9
+rx 15 ack 0 tx 17 d9
+rx 16 ack 0 tx 17 d9
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+# parameter block 6: set angle 150.0 (continuous scan)
+rx 26 ack 1 tx
+rx dc ack 1 tx
+rx 05 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 26
+rx 10 ack 0 tx 17 d9
+rx 11 ack 0 tx 13 e8
+rx 12 ack 0 tx 17 d9
+rx 13 ack 0 tx 17 d9
+rx 14 ack 0 tx 17 d9
+rx 15 ack 0 tx 17 d9
+rx 16 ack 0 tx 17 d9
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+# parameter block 6: set angle 180.0
+rx 26 ack 1 tx
+rx 08 ack 1 tx
+rx 07 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 26
+angle 120 1 1 1
+flags isref 0 inencused 1 checklegs 0
+# not referenced, encoder used
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 16 82
+rx 12 ack 0 tx 85
+rx 13 ack 0 tx 85
+rx 14 ack 0 tx 85
+rx 15 ack 0 tx 85
+rx 16 ack 0 tx 16 82
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+flags isref 1 inencused 1 checklegs 1
+angle 120 1 0 1
+# leg check on, rear leg invalid
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 16 82
+rx 12 ack 0 tx 81
+rx 13 ack 0 tx 81
+rx 14 ack 0 tx 81
+rx 15 ack 0 tx 81
+rx 16 ack 0 tx 16 82
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+flags isref 1 inencused 0 checklegs 1
+# leg check on but encoder flag off
+rx 10 ack 0 tx 13 e8
+rx 11 ack 0 tx 16 82
+rx 12 ack 0 tx 16 82
+rx 13 ack 0 tx 16 82
+rx 14 ack 0 tx 16 82
+rx 15 ack 0 tx 16 82
+rx 16 ack 0 tx 16 82
+rx 17 ack 0 tx 13 e8
+rx 18 ack 0 tx 13 e8
+rx 19 ack 0 tx 13 e8
+rx 1a ack 0 tx 13 e8
+rx 1b ack 0 tx 13 e8
+rx 1c ack 0 tx 13 e8
+rx 1d ack 0 tx 13 e8
+rx 1e ack 0 tx 13 e8
+rx 1f ack 0 tx 13 e8
+flags isref 1 inencused 1 checklegs 0
+# machine values seen at the press: p20 = 0x064, p28 = 0xAF0, p30 = 0x640
+rx 25 ack 1 tx
+rx 64 ack 1 tx
+rx 00 ack 1 tx
+rx f0 ack 1 tx
+rx 0a ack 1 tx
+rx 40 ack 1 tx
+rx 06 ack 1 tx 25
+angle 180 1 1 1
+rx 12 ack 0 tx 10 64
+angle 179.75 1 1 1
+rx 12 ack 0 tx 10 6b
+angle 150 1 1 1
+rx 12 ack 0 tx 13 e8
+angle 135 1 1 1
+rx 12 ack 0 tx 15 aa
+angle 132.664978 1 1 1
+rx 12 ack 0 tx 15 f0
+angle 120 1 1 1
+rx 12 ack 0 tx 17 6c
+angle 90 1 1 1
+rx 12 ack 0 tx 1a f0
+angle 89.1667328 1 1 1
+rx 12 ack 0 tx 1b 08
+angle 45 1 1 1
+rx 12 ack 0 tx 10 36
+angle 20 1 1 1
+rx 12 ack 0 tx 13 24
+angle 0 1 1 1
+rx 12 ack 0 tx 15 7c
+# p20 = 0x800, p28 = 0x400 (truncation at exact angles)
+rx 25 ack 1 tx
+rx 00 ack 1 tx
+rx 08 ack 1 tx
+rx 00 ack 1 tx
+rx 04 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 25
+angle 180 1 1 1
+rx 12 ack 0 tx 18 00
+angle 179.75 1 1 1
+rx 12 ack 0 tx 17 fd
+angle 150 1 1 1
+rx 12 ack 0 tx 16 aa
+angle 135 1 1 1
+rx 12 ack 0 tx 15 ff
+angle 132.664978 1 1 1
+rx 12 ack 0 tx 15 e5
+angle 120 1 1 1
+rx 12 ack 0 tx 15 55
+angle 90 1 1 1
+rx 12 ack 0 tx 13 ff
+angle 89.1667328 1 1 1
+rx 12 ack 0 tx 13 f6
+angle 45 1 1 1
+rx 12 ack 0 tx 11 ff
+angle 20 1 1 1
+rx 12 ack 0 tx 10 e3
+angle 0 1 1 1
+rx 12 ack 0 tx 10 00
+# springback queries
+rx 40 ack 1 tx 40
+rx 41 ack 1 tx 40
+rx 4f ack 1 tx 40
+# invalid commands
+rx 55 ack 1 tx ff
+rx 60 ack 1 tx ff
+rx 7f ack 1 tx ff
+rx 80 ack 1 tx ff
+rx 85 ack 1 tx ff
+rx fe ack 1 tx ff
+# error report of the Cybelec
+rx ff ack 1 tx 80
+# unknown parameter block type 3
+rx 23 ack 1 tx
+rx 00 ack 1 tx ff
+# unknown parameter block type 15
+rx 2f ack 1 tx
+rx 12 ack 1 tx ff
+# status after errors
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+# DNC block, binary record AA AA, 18 bytes
+rx 30 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 36 ack 1 tx
+rx 00 ack 1 tx
+rx 09 ack 1 tx
+rx 00 ack 1 tx
+rx aa ack 1 tx
+rx aa ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 30 05 00 37 00 03 00 4f 4b 20 30 31 38
+dnc aa aa 01 00 01 00 01 00 00 00 00 00 00 00 00 00 00 00
+# DNC block, text "1-0-1\n4-0-1\n100-1734-1\n" (22 bytes = 11 words)
+rx 30 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 36 ack 1 tx
+rx 00 ack 1 tx
+rx 0b ack 1 tx
+rx 00 ack 1 tx
+rx 31 ack 1 tx
+rx 2d ack 1 tx
+rx 30 ack 1 tx
+rx 2d ack 1 tx
+rx 31 ack 1 tx
+rx 0a ack 1 tx
+rx 34 ack 1 tx
+rx 2d ack 1 tx
+rx 30 ack 1 tx
+rx 2d ack 1 tx
+rx 31 ack 1 tx
+rx 0a ack 1 tx
+rx 31 ack 1 tx
+rx 30 ack 1 tx
+rx 30 ack 1 tx
+rx 2d ack 1 tx
+rx 31 ack 1 tx
+rx 37 ack 1 tx
+rx 33 ack 1 tx
+rx 34 ack 1 tx
+rx 2d ack 1 tx
+rx 31 ack 1 tx 30 05 00 37 00 03 00 4f 4b 20 30 32 32
+dnc 31 2d 30 2d 31 0a 34 2d 30 2d 31 0a 31 30 30 2d 31 37 33 34 2d 31
+rx 0a ack 1 tx 00 01 00 00 00 00 00 34 00
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+# DNC block with count 0: aborted after the count
+rx 30 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+# DNC block with wrong type: aborted after the type
+rx 30 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 35 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+# DNC block with 0 words: aborted after the word count
+rx 30 ack 1 tx
+rx 01 ack 1 tx
+rx 00 ack 1 tx
+rx 36 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00
+# status
+rx 00 ack 1 tx 00 01 00 00 00 00 00 34 00

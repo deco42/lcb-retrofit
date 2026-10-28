@@ -1,6 +1,8 @@
 {
     "cmake.sourceDirectory": "${workspaceFolder}/lcbd",
     "cmake.buildDirectory": "${userHome}/lcbd-build",
+    "cmake.cmakePath": "cmake",
+    "cmake.configureArgs": [],
     "cmake.configureOnOpen": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.clang_format_path": "/usr/bin/clang-format",

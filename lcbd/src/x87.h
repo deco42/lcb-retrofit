@@ -1,4 +1,3 @@
-// x87 extended-precision helpers for the angle computation
 #ifndef LCBD_X87_H
 #define LCBD_X87_H
 
@@ -21,32 +20,36 @@ typedef long double ext; // 80-bit x87 extended precision on x86-64
 #define X87_PI_2 ((ext)1.57079632679489661923)
 #define X87_PI_F ((ext)3.14159265358979323846f)
 
-// fld1 and fptan push one value for a moment: the st(1) clobber keeps that register free.
+#define X87_PRECISION_ROUNDING_MASK 0x0F00u // control word bits 8-11
+#define X87_EXTENDED_NEAREST 0x0300u        // 64-bit precision, round to nearest
+
+// fld1 and fptan push one value for a moment, the st(1) clobber keeps that register free
 static inline ext x87_atan(double x)
 {
-    ext r;
-    __asm__("fld1\n\tfpatan" : "=t"(r) : "0"((ext)x) : "st(1)");
-    return r;
+    ext result;
+    __asm__("fld1\n\tfpatan" : "=t"(result) : "0"((ext)x) : "st(1)");
+
+    return result;
 }
 
 // Only for |x| < 2^63 (fptan leaves larger arguments unchanged)
 static inline ext x87_tan(double x)
 {
-    ext r;
-    __asm__("fptan\n\tfstp %%st(0)" : "=t"(r) : "0"((ext)x) : "st(1)");
-    return r;
+    ext result;
+    __asm__("fptan\n\tfstp %%st(0)" : "=t"(result) : "0"((ext)x) : "st(1)");
+
+    return result;
 }
 
-static inline ext x87_sq(ext v) { return v * v; }
+static inline ext x87_sq(ext value) { return value * value; }
 
-// Sets extended precision and round to nearest (the Linux default 0x037F, bits 8-11 = 0x3)
 static inline unsigned short x87_set_extended_nearest(void)
 {
     unsigned short cw, want;
     __asm__ volatile("fnstcw %0" : "=m"(cw));
-    want = (unsigned short)((cw & ~0x0F00u) | 0x0300u);
-    if (want != cw)
-        __asm__ volatile("fldcw %0" : : "m"(want));
+    want = (unsigned short)((cw & ~X87_PRECISION_ROUNDING_MASK) | X87_EXTENDED_NEAREST);
+    __asm__ volatile("fldcw %0" : : "m"(want));
+
     return cw;
 }
 

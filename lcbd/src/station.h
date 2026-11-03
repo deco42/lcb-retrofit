@@ -1,10 +1,11 @@
-// combines the leg angles of the rear and front sensor into the bend angle
 #ifndef LCBD_STATION_H
 #define LCBD_STATION_H
 
 #include <stdbool.h>
 
-enum { SENSOR_REAR = 0, SENSOR_FRONT = 1 };
+#include "unit.h"
+
+#define STATION_HISTORY_MAX 3 // the result is the mean of this many accepted angles
 
 typedef struct {
     float angle; // result angle handed to the CNC link
@@ -12,20 +13,21 @@ typedef struct {
     bool valid_rear, valid_front;
 } StationOutput;
 
+// Angles in degrees
 typedef struct {
-    float alpha[2];
-    bool valid[2], delivered[2];
+    float leg_angle[UNITS];
+    bool valid[UNITS], delivered[UNITS];
     bool both;
-    int cnt[2];    // c_r, c_f
-    float last[2]; // l_r, l_f
-    float hist[3]; // smoothing history, oldest first
-    int nhist;
-    float held; // H
-    long pairs;
+    int valid_score[UNITS]; // counts valid frames up and invalid frames down
+    float last_angle[UNITS];
+    float history[STATION_HISTORY_MAX]; // accepted angles, oldest first
+    int n_history;
+    float held_angle;
+    long pair_count;
 } Station;
 
 void station_init(Station *st);
 void station_start_scan(Station *st);
-bool station_update(Station *st, int sensor, float alpha, bool valid, StationOutput *out);
+bool station_update(Station *st, int unit, float leg_angle, bool valid, StationOutput *output);
 
 #endif

@@ -8,19 +8,31 @@
 
 #include "x87.h"
 
-#define LINE_MAX_LEN 256
+#define FILE_LINE_MAX 256
 
-typedef void (*KeyHandler)(void *ctx, const char *key, const char *value, bool form);
+#define SB_TIMEOUT_DEFAULT 10
+#define SB_MEANTILT_DEFAULT 10
+#define SB_MEANTILT_FORM_DEFAULT 7
+#define SB_VALUE_MIN 1 // range of SB_TIMEOUT and SB_MEANTILT
+#define SB_VALUE_MAX 100000
 
-// Calls h for every KEY=VALUE line with all white space removed
-static void for_each_pair(const char *text, KeyHandler h, void *ctx, bool form)
+#define SHUTTER_DEFAULT 310
+#define GAIN_DEFAULT 330
+#define EXPOSURE_MAX 1023 // shutter and gain are 10-bit sensor values
+
+#define LINE_MODE_EXTENDED "LM_EXTENDED"
+#define LINE_MODE_STANDARD "LM_STANDARD"
+
+typedef void (*KeyHandler)(void *target, const char *key, const char *value, bool from_form);
+
+static void for_each_pair(const char *text, KeyHandler handler, void *target, bool from_form)
 {
-    while (text && *text) {
-        char line[LINE_MAX_LEN];
-        size_t n = 0;
+    while (*text) {
+        char line[FILE_LINE_MAX];
+        size_t len = 0;
         for (; *text && *text != '\n'; text++) {
-            if (!isspace((unsigned char)*text) && n < sizeof(line) - 1) {
-                line[n++] = *text;
+            if (!isspace((unsigned char)*text) && len < sizeof(line) - 1) {
+                line[len++] = *text;
             }
         }
 
@@ -28,238 +40,272 @@ static void for_each_pair(const char *text, KeyHandler h, void *ctx, bool form)
             text++;
         }
 
-        line[n] = 0;
-        char *eq = strchr(line, '=');
-        if (!eq || eq == line) {
+        line[len] = '\0';
+        char *equals = strchr(line, '=');
+        if (!equals || equals == line) {
             continue;
         }
 
-        *eq = 0;
-        h(ctx, line, eq + 1, form);
+        *equals = '\0';
+        handler(target, line, equals + 1, from_form);
     }
 }
 
-static void parse_bool(const char *v, bool *out)
+static void parse_bool(const char *value, bool *out)
 {
-    if (!strcasecmp(v, "TRUE") || !strcmp(v, "1")) {
+    if (strcasecmp(value, "TRUE") == 0 || strcmp(value, "1") == 0) {
         *out = true;
-    } else if (!strcasecmp(v, "FALSE") || !strcmp(v, "0")) {
+    } else if (strcasecmp(value, "FALSE") == 0 || strcmp(value, "0") == 0) {
         *out = false;
     }
 }
 
-// Integer in [lo, hi] otherwise *out is set to the fallback (form) or kept
-static void parse_int(const char *v, int *out, int lo, int hi, bool form, int fallback)
+static void parse_int(const char *value, int *out, int min, int max, bool from_form, int form_default)
 {
     char *end;
-    long x = strtol(v, &end, 10);
+    long number = strtol(value, &end, 10);
 
-    if (*v && !*end && x >= lo && x <= hi) {
-        *out = (int)x;
-    } else if (form) {
-        *out = fallback;
+    if (*value && !*end && number >= min && number <= max) {
+        *out = (int)number;
+    } else if (from_form) {
+        *out = form_default;
     }
 }
 
 static float cover_fraction(int percent) { return (float)((ext)percent / 100); }
 
-// LE_* keys, shared by setup.dat and sensor.dat returns true if the key was one of them
-static bool legline_key(LegLineParams *le, const char *k, const char *v, bool form)
+#define LAST_SECTION_POINTS_DEFAULT 60
+#define MIN_POINTS_DEFAULT 50
+#define COVER_PERCENT_DEFAULT 99
+#define TOLERANCE_DEFAULT 0.4f
+#define POINT_COUNT_MIN 1 // range of LE_POINTS_FIXL3 and LE_POINTS_MIN
+#define POINT_COUNT_MAX 99
+#define COVER_PERCENT_MIN 0
+#define COVER_PERCENT_MAX 199
+
+static void leg_line_key(LegLineParams *par, const char *key, const char *value, bool from_form)
 {
-    if (!strcmp(k, "LE_POINTS_FIXL3")) {
-        parse_int(v, &le->fix, 1, 99, form, 60);
-    } else if (!strcmp(k, "LE_POINTS_MIN")) {
-        parse_int(v, &le->pmin, 1, 99, form, 50);
-    } else if (!strcmp(k, "LE_COVER")) {
-        int percent = -1;
-        parse_int(v, &percent, 0, 199, form, 99);
+    if (strcmp(key, "LE_POINTS_FIXL3") == 0) {
+        parse_int(value, &par->last_section_points, POINT_COUNT_MIN, POINT_COUNT_MAX, from_form,
+                  LAST_SECTION_POINTS_DEFAULT);
+    } else if (strcmp(key, "LE_POINTS_MIN") == 0) {
+        parse_int(value, &par->min_points, POINT_COUNT_MIN, POINT_COUNT_MAX, from_form, MIN_POINTS_DEFAULT);
+    } else if (strcmp(key, "LE_COVER") == 0) {
+        int percent = -1; // stays negative when an invalid value is kept
+        parse_int(value, &percent, COVER_PERCENT_MIN, COVER_PERCENT_MAX, from_form, COVER_PERCENT_DEFAULT);
         if (percent >= 0) {
-            le->cover = cover_fraction(percent);
+            par->cover = cover_fraction(percent);
         }
-    } else if (!strcmp(k, "LE_TOLERANCE")) {
+    } else if (strcmp(key, "LE_TOLERANCE") == 0) {
         char *end;
-        double x = strtod(v, &end);
-        if (*v && !*end && x > 0) {
-            le->tol = (float)x;
-        } else if (form) {
-            le->tol = 0.4f;
+        double tolerance = strtod(value, &end);
+        if (*value && !*end && tolerance > 0) {
+            par->tolerance = (float)tolerance;
+        } else if (from_form) {
+            par->tolerance = TOLERANCE_DEFAULT;
         }
-    } else if (!strcmp(k, "LE_LINE_MODE")) {
-        le->extended = !strcmp(v, "LM_EXTENDED");
-    } else {
-        return false;
+    } else if (strcmp(key, "LE_LINE_MODE") == 0) {
+        par->extended = strcmp(value, LINE_MODE_EXTENDED) == 0;
     }
-
-    return true;
 }
 
-static void legline_defaults(LegLineParams *le)
+static void leg_line_defaults(LegLineParams *par)
 {
-    le->fix = 60;
-    le->pmin = 50;
-    le->cover = cover_fraction(99);
-    le->tol = 0.4f;
-    le->extended = true;
+    par->last_section_points = LAST_SECTION_POINTS_DEFAULT;
+    par->min_points = MIN_POINTS_DEFAULT;
+    par->cover = cover_fraction(COVER_PERCENT_DEFAULT);
+    par->tolerance = TOLERANCE_DEFAULT;
+    par->extended = true;
 }
 
-int legline_cover_percent(const LegLineParams *p) { return (int)(p->cover * 100.0 + 0.5); }
-
-const char *legline_mode_name(const LegLineParams *p) { return p->extended ? "LM_EXTENDED" : "LM_STANDARD"; }
-
-void setup_defaults(SetupFile *s)
+static void setup_key(void *target, const char *key, const char *value, bool from_form)
 {
-    memset(s, 0, sizeof(*s));
-    s->ctl.move_method = MV_REF;
-    s->ctl.move_down_start = true;
-    s->sb_timeout = 10;
-    s->sb_meantilt = 10;
-    legline_defaults(&s->le);
-}
-
-static void setup_key(void *ctx, const char *k, const char *v, bool form)
-{
-    SetupFile *s = ctx;
-    if (!strcmp(k, "MV_METHOD")) {
-        if (!strcmp(v, "MV_REF")) {
-            s->ctl.move_method = MV_REF;
-        } else if (!strcmp(v, "MV_POS")) {
-            s->ctl.move_method = MV_POS;
+    SetupFile *setup = target;
+    if (strcmp(key, "MV_METHOD") == 0) {
+        if (strcmp(value, move_method_name(MOVE_METHOD_REF)) == 0) {
+            setup->ctl.move_method = MOVE_METHOD_REF;
+        } else if (strcmp(value, move_method_name(MOVE_METHOD_POS)) == 0) {
+            setup->ctl.move_method = MOVE_METHOD_POS;
         }
-    } else if (!strcmp(k, "MOVE_DOWN_START")) {
-        parse_bool(v, &s->ctl.move_down_start);
-    } else if (!strcmp(k, "USE_SECURE_ANGLE")) {
-        parse_bool(v, &s->ctl.secure_angle);
-    } else if (!strcmp(k, "USE_TURN")) {
-        parse_bool(v, &s->ctl.use_turn);
-    } else if (!strcmp(k, "SB_TIMEOUT")) {
-        parse_int(v, &s->sb_timeout, 1, 100000, form, 10);
-    } else if (!strcmp(k, "SB_MEANTILT")) {
-        parse_int(v, &s->sb_meantilt, 1, 100000, form, 7);
+    } else if (strcmp(key, "MOVE_DOWN_START") == 0) {
+        parse_bool(value, &setup->ctl.move_down_start);
+    } else if (strcmp(key, "USE_SECURE_ANGLE") == 0) {
+        parse_bool(value, &setup->ctl.secure_angle);
+    } else if (strcmp(key, "USE_TURN") == 0) {
+        parse_bool(value, &setup->ctl.use_turn);
+    } else if (strcmp(key, "SB_TIMEOUT") == 0) {
+        parse_int(value, &setup->sb_timeout_s, SB_VALUE_MIN, SB_VALUE_MAX, from_form, SB_TIMEOUT_DEFAULT);
+    } else if (strcmp(key, "SB_MEANTILT") == 0) {
+        parse_int(value, &setup->sb_meantilt, SB_VALUE_MIN, SB_VALUE_MAX, from_form, SB_MEANTILT_FORM_DEFAULT);
     } else {
-        legline_key(&s->le, k, v, form);
+        leg_line_key(&setup->leg_line, key, value, from_form);
     }
 }
 
-void setup_parse(SetupFile *s, const char *text, bool form) { for_each_pair(text, setup_key, s, form); }
+static const char *const SHUTTER_KEYS[UNITS] = {"SENSOR_1_SHUTTERTIME", "SENSOR_2_SHUTTERTIME"};
+static const char *const GAIN_KEYS[UNITS] = {"SENSOR_1_VIDEOGAIN", "SENSOR_2_VIDEOGAIN"};
 
-size_t setup_format(const SetupFile *s, char *buf, size_t len)
+static void sensor_key(void *target, const char *key, const char *value, bool from_form)
 {
-    int n = snprintf(buf, len,
-                     "MV_METHOD=%s\nMOVE_DOWN_START=%s\nUSE_SECURE_ANGLE=%s\nSB_TIMEOUT=%d\nSB_MEANTILT=%d\n"
-                     "LE_POINTS_FIXL3=%d\nLE_POINTS_MIN=%d\nLE_COVER=%d\nLE_TOLERANCE=%g\nLE_LINE_MODE=%s\n",
-                     s->ctl.move_method == MV_POS ? "MV_POS" : "MV_REF", s->ctl.move_down_start ? "TRUE" : "FALSE",
-                     s->ctl.secure_angle ? "TRUE" : "FALSE", s->sb_timeout, s->sb_meantilt, s->le.fix, s->le.pmin,
-                     legline_cover_percent(&s->le), (double)s->le.tol, legline_mode_name(&s->le));
+    SensorFile *sensor_file = target;
+    SensorRegs *regs = sensor_file->regs;
+    (void)from_form;
 
-    return n < 0 ? 0 : (size_t)n;
-}
+    for (int unit = 0; unit < UNITS; unit++) {
+        if (strcmp(key, SHUTTER_KEYS[unit]) == 0) {
+            parse_int(value, &regs[unit].shutter, 0, EXPOSURE_MAX, false, 0);
+            return;
+        }
 
-void sensor_defaults(SensorFile *s)
-{
-    memset(s, 0, sizeof(*s));
-
-    for (int i = 0; i < 2; i++) {
-        s->regs[i] = (SensorRegs){.light_filter = true, .internal_ctrl = false, .shutter = 310, .gain = 330};
+        if (strcmp(key, GAIN_KEYS[unit]) == 0) {
+            parse_int(value, &regs[unit].gain, 0, EXPOSURE_MAX, false, 0);
+            return;
+        }
     }
 
-    legline_defaults(&s->le);
-}
-
-static void sensor_key(void *ctx, const char *k, const char *v, bool form)
-{
-    SensorFile *s = ctx;
-    SensorRegs *r = s->regs;
-    (void)form;
-
-    // the two USE_* switches hold for both sensors
-    if (!strcmp(k, "USE_EXTERNAL_LIGHT_FILTER")) {
-        parse_bool(v, &r[0].light_filter);
-        r[1].light_filter = r[0].light_filter;
-    } else if (!strcmp(k, "USE_INTERNAL_SENSOR_CTRL")) {
-        parse_bool(v, &r[0].internal_ctrl);
-        r[1].internal_ctrl = r[0].internal_ctrl;
-    } else if (!strcmp(k, "SENSOR_1_SHUTTERTIME")) {
-        parse_int(v, &r[0].shutter, 0, 1023, false, 0);
-    } else if (!strcmp(k, "SENSOR_1_VIDEOGAIN")) {
-        parse_int(v, &r[0].gain, 0, 1023, false, 0);
-    } else if (!strcmp(k, "SENSOR_2_SHUTTERTIME")) {
-        parse_int(v, &r[1].shutter, 0, 1023, false, 0);
-    } else if (!strcmp(k, "SENSOR_2_VIDEOGAIN")) {
-        parse_int(v, &r[1].gain, 0, 1023, false, 0);
+    if (strcmp(key, "USE_EXTERNAL_LIGHT_FILTER") == 0) {
+        parse_bool(value, &regs[UNIT_REAR].light_filter);
+    } else if (strcmp(key, "USE_INTERNAL_SENSOR_CTRL") == 0) {
+        parse_bool(value, &regs[UNIT_REAR].internal_control);
     } else {
-        legline_key(&s->le, k, v, false);
+        leg_line_key(&sensor_file->leg_line, key, value, false);
     }
+
+    // The USE_* switches hold for both sensors
+    regs[UNIT_FRONT].light_filter = regs[UNIT_REAR].light_filter;
+    regs[UNIT_FRONT].internal_control = regs[UNIT_REAR].internal_control;
 }
 
-void sensor_parse(SensorFile *s, const char *text) { for_each_pair(text, sensor_key, s, false); }
-
-int dies_parse(const char *text, DieEntry *out, int max)
+void setup_file_defaults(SetupFile *setup)
 {
-    int n = 0;
-    while (text && *text && n < max) {
-        char line[LINE_MAX_LEN];
-        size_t len = strcspn(text, "\n");
-        snprintf(line, sizeof(line), "%.*s", (int)(len < sizeof(line) ? len : sizeof(line) - 1), text);
-        text += len + (text[len] == '\n');
-        line[strcspn(line, "\r")] = 0;
+    memset(setup, 0, sizeof(*setup));
+    setup->ctl.move_method = MOVE_METHOD_REF;
+    setup->ctl.move_down_start = true;
+    setup->sb_timeout_s = SB_TIMEOUT_DEFAULT;
+    setup->sb_meantilt = SB_MEANTILT_DEFAULT;
+    leg_line_defaults(&setup->leg_line);
+}
 
-        char *f[5] = {0};
-        int nf = 0;
-        for (char *p = line; nf < 5 && p; nf++) {
-            f[nf] = p;
-            p = strchr(p, ',');
+void setup_file_parse(SetupFile *setup, const char *text, bool from_form)
+{
+    for_each_pair(text, setup_key, setup, from_form);
+}
 
-            if (p) {
-                *p++ = 0;
+size_t setup_file_format(const SetupFile *setup, char *buf, size_t size)
+{
+    const CtlSetup *ctl = &setup->ctl;
+    const LegLineParams *par = &setup->leg_line;
+    int len = snprintf(buf, size,
+                       "MV_METHOD=%s\nMOVE_DOWN_START=%s\nUSE_SECURE_ANGLE=%s\nUSE_TURN=%s\nSB_TIMEOUT=%d\n"
+                       "SB_MEANTILT=%d\nLE_POINTS_FIXL3=%d\nLE_POINTS_MIN=%d\nLE_COVER=%d\nLE_TOLERANCE=%g\n"
+                       "LE_LINE_MODE=%s\n",
+                       move_method_name(ctl->move_method), ctl->move_down_start ? "TRUE" : "FALSE",
+                       ctl->secure_angle ? "TRUE" : "FALSE", ctl->use_turn ? "TRUE" : "FALSE", setup->sb_timeout_s,
+                       setup->sb_meantilt, par->last_section_points, par->min_points, leg_line_cover_percent(par),
+                       (double)par->tolerance, leg_line_mode_name(par));
+
+    return len < 0 ? 0 : (size_t)len;
+}
+
+void sensor_file_defaults(SensorFile *sensor_file)
+{
+    memset(sensor_file, 0, sizeof(*sensor_file));
+
+    for (int unit = 0; unit < UNITS; unit++) {
+        sensor_file->regs[unit] = (SensorRegs){
+            .light_filter = true, .internal_control = false, .shutter = SHUTTER_DEFAULT, .gain = GAIN_DEFAULT};
+    }
+
+    leg_line_defaults(&sensor_file->leg_line);
+}
+
+void sensor_file_parse(SensorFile *sensor_file, const char *text)
+{
+    for_each_pair(text, sensor_key, sensor_file, false);
+}
+
+int leg_line_cover_percent(const LegLineParams *par) { return (int)(par->cover * 100.0 + 0.5); }
+
+const char *leg_line_mode_name(const LegLineParams *par)
+{
+    return par->extended ? LINE_MODE_EXTENDED : LINE_MODE_STANDARD;
+}
+
+const char *move_method_name(MoveMethod method) { return method == MOVE_METHOD_POS ? "MV_POS" : "MV_REF"; }
+
+// The columns of die.dat: name, rear and front position, then x and y which are not used
+typedef enum { DIE_COLUMN_NAME, DIE_COLUMN_REAR, DIE_COLUMN_FRONT, DIE_COLUMN_X, DIE_COLUMN_Y, DIE_COLUMNS } DieColumn;
+
+int dies_parse(const char *text, DieEntry *dies, int max)
+{
+    int n_dies = 0;
+    while (*text && n_dies < max) {
+        char line[FILE_LINE_MAX];
+        size_t line_len = strcspn(text, "\n");
+        snprintf(line, sizeof(line), "%.*s", (int)(line_len < sizeof(line) ? line_len : sizeof(line) - 1), text);
+        text += line_len + (text[line_len] == '\n');
+        line[strcspn(line, "\r")] = '\0';
+
+        char *columns[DIE_COLUMNS] = {0};
+        int n_columns = 0;
+        for (char *rest = line; n_columns < DIE_COLUMNS && rest; n_columns++) {
+            columns[n_columns] = rest;
+            rest = strchr(rest, ',');
+
+            if (rest) {
+                *rest++ = '\0';
             }
         }
 
-        size_t nl = f[0] ? strlen(f[0]) : 0;
-        if (nf < 3 || nl < 1 || nl > DIE_NAME_MAX) {
+        const char *name = columns[DIE_COLUMN_NAME];
+        size_t name_len = strlen(name);
+        if (n_columns <= DIE_COLUMN_FRONT || name_len < 1 || name_len > DIE_NAME_MAX) {
             continue;
         }
 
-        char *e1, *e2;
-        long rear = strtol(f[1], &e1, 10), front = strtol(f[2], &e2, 10);
-        if (!*f[1] || *e1 || !*f[2] || *e2) {
+        const char *rear_text = columns[DIE_COLUMN_REAR], *front_text = columns[DIE_COLUMN_FRONT];
+        char *rear_end, *front_end;
+        long rear = strtol(rear_text, &rear_end, 10), front = strtol(front_text, &front_end, 10);
+        if (!*rear_text || *rear_end || !*front_text || *front_end) {
             continue;
         }
 
-        snprintf(out[n].name, sizeof(out[n].name), "%s", f[0]);
-        out[n].rear = (int32_t)rear;
-        out[n].front = (int32_t)front;
-        n++;
+        snprintf(dies[n_dies].name, sizeof(dies[n_dies].name), "%s", name);
+        dies[n_dies].rear = (int32_t)rear;
+        dies[n_dies].front = (int32_t)front;
+        n_dies++;
     }
 
-    return n;
+    return n_dies;
 }
 
-size_t dies_format(const DieEntry *d, int n, char *buf, size_t len)
+size_t dies_format(const DieEntry *dies, int n_dies, char *buf, size_t size)
 {
-    size_t used = 0;
-    buf[0] = 0;
-    for (int i = 0; i < n && used < len; i++) {
-        int w = snprintf(buf + used, len - used, "%s,%d,%d,0,0\n", d[i].name, (int)d[i].rear, (int)d[i].front);
-        if (w < 0) {
+    size_t len = 0;
+    buf[0] = '\0';
+    for (int i = 0; i < n_dies && len < size; i++) {
+        int written =
+            snprintf(buf + len, size - len, "%s,%d,%d,0,0\n", dies[i].name, (int)dies[i].rear, (int)dies[i].front);
+        if (written < 0) {
             break;
         }
 
-        used += (size_t)w;
+        len += (size_t)written;
     }
 
-    return used < len ? used : len - 1;
+    return len < size ? len : size - 1;
 }
 
-size_t config_describe(const SetupFile *s, const SensorFile *f, char *buf, size_t len)
+void config_describe(const SetupFile *setup, const SensorFile *sensor_file, char *buf, size_t size)
 {
-    int n =
-        snprintf(buf, len,
-                 "setup: %s, move down at start %d, secure angle %d, use turn %d, SB %d/%d; sensors: light filter %d, "
-                 "internal control %d, rear %d/%d, front %d/%d, line %s fix %d min %d cover %d tol %g",
-                 s->ctl.move_method == MV_POS ? "MV_POS" : "MV_REF", s->ctl.move_down_start, s->ctl.secure_angle,
-                 s->ctl.use_turn, s->sb_timeout, s->sb_meantilt, f->regs[0].light_filter, f->regs[0].internal_ctrl,
-                 f->regs[0].shutter, f->regs[0].gain, f->regs[1].shutter, f->regs[1].gain, legline_mode_name(&f->le),
-                 f->le.fix, f->le.pmin, legline_cover_percent(&f->le), (double)f->le.tol);
-
-    return n < 0 ? 0 : (size_t)n;
+    const CtlSetup *ctl = &setup->ctl;
+    const SensorRegs *rear = &sensor_file->regs[UNIT_REAR], *front = &sensor_file->regs[UNIT_FRONT];
+    const LegLineParams *par = &sensor_file->leg_line;
+    snprintf(buf, size,
+             "setup: %s, move down at start %d, secure angle %d, use turn %d, SB %d/%d, sensors: light "
+             "filter %d, internal control %d, rear %d/%d, front %d/%d, line %s fix %d min %d cover %d tol %g",
+             move_method_name(ctl->move_method), ctl->move_down_start, ctl->secure_angle, ctl->use_turn,
+             setup->sb_timeout_s, setup->sb_meantilt, rear->light_filter, rear->internal_control, rear->shutter,
+             rear->gain, front->shutter, front->gain, leg_line_mode_name(par), par->last_section_points,
+             par->min_points, leg_line_cover_percent(par), (double)par->tolerance);
 }

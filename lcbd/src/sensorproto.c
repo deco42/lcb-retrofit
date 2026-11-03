@@ -2,75 +2,73 @@
 
 #include <string.h>
 
-#define REG_SHUTTER 0x00
-#define REG_GAIN 0x06
-#define REG_LIGHT_FILTER 0x0B
-#define REG_FIXED 0x15
-#define START_STREAMING 0x1C
-#define CONNECT_SHUTTER 1022
-#define CONNECT_GAIN 400
+#define IDLE_SHUTTER 1022 // fixed exposure while no scan runs
+#define IDLE_GAIN 400
 
-static size_t reg(uint8_t *o, size_t n, int r, int value)
+static size_t put_register(uint8_t *cmd, size_t len, int number, int value)
 {
-    o[n++] = (uint8_t)(r & 0x7F);
-    o[n++] = (uint8_t)(0x80 | (value & 0x7F));
-    return n;
+    cmd[len++] = (uint8_t)(number & 0x7F);
+    cmd[len++] = (uint8_t)(0x80 | (value & 0x7F));
+    return len;
 }
 
-static size_t fixed_exposure(uint8_t *o, size_t n, int shutter, int gain)
+static size_t put_fixed_exposure(uint8_t *cmd, size_t len, int shutter, int gain)
 {
-    n = reg(o, n, REG_FIXED, 1);
-    n = reg(o, n, REG_SHUTTER, shutter & 0x7F);
-    n = reg(o, n, REG_SHUTTER + 1, (shutter >> 7) & 7);
-    n = reg(o, n, REG_GAIN, gain & 0x7F);
-    n = reg(o, n, REG_GAIN + 1, (gain >> 7) & 7);
-    return n;
+    len = put_register(cmd, len, SENSOR_REG_FIXED, 1);
+    len = put_register(cmd, len, SENSOR_REG_SHUTTER, shutter);
+    len = put_register(cmd, len, SENSOR_REG_SHUTTER + 1, (shutter >> 7) & 7);
+    len = put_register(cmd, len, SENSOR_REG_GAIN, gain);
+    return put_register(cmd, len, SENSOR_REG_GAIN + 1, (gain >> 7) & 7);
 }
 
-static size_t scan_mode(const SensorRegs *r, uint8_t *o, size_t n)
+static size_t put_scan_mode(const SensorRegs *regs, uint8_t *cmd, size_t len)
 {
-    return r->internal_ctrl ? fixed_exposure(o, n, r->shutter, r->gain) : reg(o, n, REG_FIXED, 0);
+    if (regs->internal_control) {
+        return put_fixed_exposure(cmd, len, regs->shutter, regs->gain);
+    }
+
+    return put_register(cmd, len, SENSOR_REG_FIXED, 0);
 }
 
-size_t sensor_command(const SensorRegs *r, SensorEvent ev, uint8_t out[SENSOR_CMD_MAX])
+size_t sensor_command(const SensorRegs *regs, SensorEvent event, uint8_t cmd[SENSOR_CMD_MAX])
 {
-    size_t n = 0;
-    switch (ev) {
-    case SE_CONNECTED:
-        n = fixed_exposure(out, n, CONNECT_SHUTTER, CONNECT_GAIN);
-        out[n++] = START_STREAMING;
+    size_t len = 0;
+    switch (event) {
+    case SENSOR_CONNECTED:
+        len = put_fixed_exposure(cmd, len, IDLE_SHUTTER, IDLE_GAIN);
+        cmd[len++] = SENSOR_CMD_START_STREAMING;
         break;
-    case SE_START_SCAN:
-        n = scan_mode(r, out, n);
+    case SENSOR_START_SCAN:
+        len = put_scan_mode(regs, cmd, len);
         break;
-    case SE_STOP_SCAN:
-        if (r->light_filter) {
-            n = reg(out, n, REG_LIGHT_FILTER, 0);
+    case SENSOR_STOP_SCAN:
+        if (regs->light_filter) {
+            len = put_register(cmd, len, SENSOR_REG_LIGHT_FILTER, 0);
         }
 
-        n = fixed_exposure(out, n, CONNECT_SHUTTER, CONNECT_GAIN);
+        len = put_fixed_exposure(cmd, len, IDLE_SHUTTER, IDLE_GAIN);
         break;
-    case SE_START_REFERENCE:
-        if (r->light_filter) {
-            n = reg(out, n, REG_LIGHT_FILTER, 1);
+    case SENSOR_START_REFERENCE:
+        if (regs->light_filter) {
+            len = put_register(cmd, len, SENSOR_REG_LIGHT_FILTER, 1);
         }
 
-        n = scan_mode(r, out, n);
+        len = put_scan_mode(regs, cmd, len);
         break;
     }
 
-    return n;
+    return len;
 }
 
-void frame_assembler_reset(FrameAssembler *a)
+void frame_assembler_reset(FrameAssembler *fa)
 {
-    a->fill = 0;
-    a->invalid_run = 0;
+    fa->frame_len = 0;
+    fa->invalid_run = 0;
 }
 
 static bool frame_is_valid(const uint8_t frame[FRAME_SIZE])
 {
-    for (int i = 0x34; i <= 0x3B; i++) {
+    for (int i = FRAME_ZERO_FIRST; i <= FRAME_ZERO_LAST; i++) {
         if (frame[i]) {
             return false;
         }
@@ -79,31 +77,31 @@ static bool frame_is_valid(const uint8_t frame[FRAME_SIZE])
     return true;
 }
 
-FrameStatus frame_assemble(FrameAssembler *a, const uint8_t **data, size_t *len)
+FrameStatus frame_assemble(FrameAssembler *fa, const uint8_t **data, size_t *len)
 {
-    size_t take = FRAME_SIZE - a->fill;
+    size_t take = FRAME_SIZE - fa->frame_len;
     if (take > *len) {
         take = *len;
     }
 
-    memcpy(a->frame + a->fill, *data, take);
-    a->fill += take;
+    memcpy(fa->frame + fa->frame_len, *data, take);
+    fa->frame_len += take;
     *data += take;
     *len -= take;
 
-    if (a->fill < FRAME_SIZE) {
+    if (fa->frame_len < FRAME_SIZE) {
         return FRAME_NONE;
     }
 
-    a->fill = 0;
+    fa->frame_len = 0;
 
-    if (frame_is_valid(a->frame)) {
-        a->invalid_run = 0;
+    if (frame_is_valid(fa->frame)) {
+        fa->invalid_run = 0;
         return FRAME_VALID;
     }
 
-    if (++a->invalid_run >= FRAME_RESYNC_INVALID) {
-        a->invalid_run = 0;
+    if (++fa->invalid_run >= FRAME_RESYNC_INVALID) {
+        fa->invalid_run = 0;
         return FRAME_RESYNC;
     }
 

@@ -12,6 +12,12 @@ ModEva 12S (DNC 1200). Uses the existing cables, sensors, Cybelec settings and p
 | Sensors | 2 laser line sensors, Ethernet | unchanged |
 | Power | 230 V, IEC inlet | Mean Well HDR-60-24 (230 V AC -> 24 V DC) |
 
+A Revolution Pi (Connect 4 + DIO) or similar would probably work too. However, it was not chosen because the RevPi
+exchanges its I/O in a PiBridge cycle of a few milliseconds (compared to 1 ms in the original box) and the DIO counter
+stops at 2 kHz (compared to 5 kHz in the PA 1500). EtherCAT maintains the 1 ms cycle and the EL1502 can count up to
+100 kHz. (And I was too lazy to measure the encoder frequency and to test how the carriages react to the slower RevPi
+switching. When I built it, both setups cost basically the same.)
+
 ## Approach
 
 1. Original box analysed at the machine for interoperability: I/O, CNC link, sensor protocol, sequences, captures.

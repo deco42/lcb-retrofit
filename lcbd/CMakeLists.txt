@@ -50,6 +50,15 @@ add_library(lcbecat STATIC src/ecat.c)
 target_include_directories(lcbecat PUBLIC src)
 target_link_libraries(lcbecat PRIVATE soem PUBLIC Threads::Threads)
 
+add_executable(lcbd
+    src/main.c
+    src/shared.c
+    src/log.c
+    src/persist.c
+    src/hal.c
+)
+target_link_libraries(lcbd PRIVATE lcbcore lcbecat Threads::Threads)
+
 # tests
 enable_testing()
 set(TESTDATA ${CMAKE_SOURCE_DIR}/../testdata CACHE PATH "folder with the reference test data")

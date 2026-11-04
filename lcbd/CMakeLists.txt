@@ -56,6 +56,7 @@ add_executable(lcbd
     src/log.c
     src/persist.c
     src/hal.c
+    src/link.c
 )
 target_link_libraries(lcbd PRIVATE lcbcore lcbecat Threads::Threads)
 

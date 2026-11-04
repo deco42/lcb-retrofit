@@ -1,7 +1,7 @@
 # LCB retrofit
 
 Replacement for the laser angle measuring box (LCB, „WMS“) of an EHT VarioPress press brake with Cybelec
-DNC 1200. Uses the existing cables, sensors, Cybelec settings and protocols.
+ModEva 12S (DNC 1200). Uses the existing cables, sensors, Cybelec settings and protocols.
 
 | Part | Original box | Replacement |
 |---|---|---|

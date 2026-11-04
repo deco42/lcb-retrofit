@@ -1,7 +1,7 @@
 # lcbd
 
 Laser angle measurement of the press brake: drives the two measuring units, evaluates the two laser line sensors,
-sends the bend angle to the Cybelec DNC 1200 over the serial NLR link.
+sends the bend angle to the Cybelec ModEva 12S (DNC 1200) over the serial NLR link.
 
 ## Threads
 

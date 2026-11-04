@@ -72,15 +72,37 @@ add_executable(lcbd
     src/web.c
     ${CMAKE_BINARY_DIR}/web_assets.c
 )
+
+add_executable(lcb_test src/lcb_test.c)
+target_link_libraries(lcb_test PRIVATE lcbecat)
+
+add_executable(lcb_replay tools/replay.c)
+target_link_libraries(lcb_replay PRIVATE lcbcore)
+
 target_link_libraries(lcbd PRIVATE lcbcore lcbecat Threads::Threads)
+
+install(TARGETS lcbd lcb_test RUNTIME DESTINATION bin)
 
 # tests
 enable_testing()
 set(TESTDATA ${CMAKE_SOURCE_DIR}/../testdata CACHE PATH "folder with the reference test data")
 
-foreach(t config nlr sensorproto station evaluator io sequences httputil)
+foreach(t config nlr sensorproto station evaluator io sequences httputil frames)
     add_executable(test_${t} tests/test_${t}.c)
     target_link_libraries(test_${t} PRIVATE lcbcore)
     add_test(NAME unit_${t} COMMAND test_${t} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endforeach()
 set_tests_properties(unit_nlr PROPERTIES ENVIRONMENT "LCBD_VECTORS=${TESTDATA}/cybelec_link.vectors.txt")
+
+set(HAVE_RECORDINGS FALSE)
+if(EXISTS ${TESTDATA}/bend_090.frames)
+    set(HAVE_RECORDINGS TRUE)
+else()
+    message(STATUS "sensor recordings not found in ${TESTDATA}: frame and replay tests skipped")
+endif()
+
+if(HAVE_RECORDINGS)
+    add_test(NAME vectors_bend_090 COMMAND test_frames ${TESTDATA}/bend_090.frames ${TESTDATA}/bend_090.expected.csv --time)
+    add_test(NAME vectors_bend_135 COMMAND test_frames ${TESTDATA}/bend_135.frames ${TESTDATA}/bend_135.expected.csv --time)
+    add_test(NAME vectors_synthetic COMMAND test_frames ${TESTDATA}/synthetic.frames ${TESTDATA}/synthetic.expected.csv --min 99.9 --time)
+endif()

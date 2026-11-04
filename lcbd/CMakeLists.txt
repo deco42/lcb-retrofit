@@ -40,6 +40,7 @@ add_library(lcbcore STATIC
     src/control.c
     src/sequences.c
     src/sim.c
+    src/httputil.c
 )
 
 target_include_directories(lcbcore PUBLIC src)
@@ -53,7 +54,7 @@ target_link_libraries(lcbecat PRIVATE soem PUBLIC Threads::Threads)
 enable_testing()
 set(TESTDATA ${CMAKE_SOURCE_DIR}/../testdata CACHE PATH "folder with the reference test data")
 
-foreach(t config nlr sensorproto station evaluator io sequences)
+foreach(t config nlr sensorproto station evaluator io sequences httputil)
     add_executable(test_${t} tests/test_${t}.c)
     target_link_libraries(test_${t} PRIVATE lcbcore)
     add_test(NAME unit_${t} COMMAND test_${t} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

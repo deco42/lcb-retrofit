@@ -57,6 +57,7 @@ add_executable(lcbd
     src/persist.c
     src/hal.c
     src/link.c
+    src/sensor_client.c
 )
 target_link_libraries(lcbd PRIVATE lcbcore lcbecat Threads::Threads)
 

@@ -14,7 +14,7 @@
 #include "station.h"
 #include "unit.h"
 
-#define VERSION "1.0.0"
+#define VERSION "2.0.0"
 #define HISTORY_MAX 1024
 #define SENSOR_ADDR_MAX 96
 #define SERVICE_REPLY_MAX 256

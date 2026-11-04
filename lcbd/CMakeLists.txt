@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(lcbd VERSION 0.1.0 LANGUAGES C)
+project(lcbd VERSION 2.0.0 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -87,12 +87,15 @@ install(TARGETS lcbd lcb_test RUNTIME DESTINATION bin)
 enable_testing()
 set(TESTDATA ${CMAKE_SOURCE_DIR}/../testdata CACHE PATH "folder with the reference test data")
 
-foreach(t config nlr sensorproto station evaluator io sequences httputil frames)
+foreach(t config nlr sensorproto station evaluator io sequences httputil)
     add_executable(test_${t} tests/test_${t}.c)
     target_link_libraries(test_${t} PRIVATE lcbcore)
     add_test(NAME unit_${t} COMMAND test_${t} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endforeach()
 set_tests_properties(unit_nlr PROPERTIES ENVIRONMENT "LCBD_VECTORS=${TESTDATA}/cybelec_link.vectors.txt")
+
+add_executable(test_frames tests/test_frames.c)
+target_link_libraries(test_frames PRIVATE lcbcore)
 
 set(HAVE_RECORDINGS FALSE)
 if(EXISTS ${TESTDATA}/bend_090.frames)
@@ -105,4 +108,20 @@ if(HAVE_RECORDINGS)
     add_test(NAME vectors_bend_090 COMMAND test_frames ${TESTDATA}/bend_090.frames ${TESTDATA}/bend_090.expected.csv --time)
     add_test(NAME vectors_bend_135 COMMAND test_frames ${TESTDATA}/bend_135.frames ${TESTDATA}/bend_135.expected.csv --time)
     add_test(NAME vectors_synthetic COMMAND test_frames ${TESTDATA}/synthetic.frames ${TESTDATA}/synthetic.expected.csv --min 99.9 --time)
+endif()
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    add_test(NAME integration
+             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/integration_test.py $<TARGET_FILE:lcbd>)
+    set_tests_properties(integration PROPERTIES TIMEOUT 300)
+    if(HAVE_RECORDINGS)
+        foreach(bend bend_090 bend_135)
+            add_test(NAME replay_${bend}
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/replay_test.py $<TARGET_FILE:lcb_replay>
+                             ${TESTDATA}/${bend}.pcap ${TESTDATA}/${bend}.expected.csv)
+        endforeach()
+    endif()
+    add_test(NAME com1_tool COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/com1_tool_test.py
+                                    ${CMAKE_SOURCE_DIR}/tools/com1_test.py)
 endif()

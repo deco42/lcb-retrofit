@@ -50,6 +50,16 @@ add_library(lcbecat STATIC src/ecat.c)
 target_include_directories(lcbecat PUBLIC src)
 target_link_libraries(lcbecat PRIVATE soem PUBLIC Threads::Threads)
 
+file(GLOB WEB_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/web/*)
+string(JOIN "|" WEB_FILE_LIST ${WEB_FILES})
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/web_assets.c
+    COMMAND ${CMAKE_COMMAND} -DOUT=${CMAKE_BINARY_DIR}/web_assets.c -DFILES=${WEB_FILE_LIST}
+            -P ${CMAKE_SOURCE_DIR}/cmake/embed.cmake
+    DEPENDS ${WEB_FILES} ${CMAKE_SOURCE_DIR}/cmake/embed.cmake
+    COMMENT "embedding web/ into the binary"
+    VERBATIM)
+
 add_executable(lcbd
     src/main.c
     src/shared.c
@@ -58,6 +68,9 @@ add_executable(lcbd
     src/hal.c
     src/link.c
     src/sensor_client.c
+    src/iothread.c
+    src/web.c
+    ${CMAKE_BINARY_DIR}/web_assets.c
 )
 target_link_libraries(lcbd PRIVATE lcbcore lcbecat Threads::Threads)
 

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lcbd service</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>lcbd <span id="version"></span> <span id="sim" class="tag hidden" data-t>simulation</span></h1>
+  <div id="summary"></div>
+  <div class="login">
+    <label data-tip-title="password"><span data-t>service password</span> <input type="password" id="password" autocomplete="current-password"></label>
+    <span id="conn" class="tag" data-t>offline</span>
+    <span class="lang"><button data-lang="de">DE</button><button data-lang="en">EN</button></span>
+  </div>
+</header>
+<nav id="tabs">
+  <button data-tab="io" class="active" data-t>I/O</button>
+  <button data-tab="link" data-t>CNC link</button>
+  <button data-tab="ctl" data-t>Controller</button>
+  <button data-tab="sensors" data-t>Sensors</button>
+  <button data-tab="dies" data-t>Die positions</button>
+  <button data-tab="history" data-t>Angle history</button>
+  <button data-tab="setup" data-t>Setup</button>
+  <button data-tab="log" data-t>Log</button>
+</nav>
+<div id="toasts" aria-live="polite"></div>
+<main>
+<section id="io" class="tab active">
+  <label class="enable" data-tip-title="enable"><input type="checkbox" id="enable"> <span data-t>enable switching and driving</span></label>
+  <p id="armedline" class="warnline hidden" data-t>Enabled: outputs, counter reset and driving act directly on the machine.</p>
+  <div class="cols">
+    <div class="card"><h2 data-t>Inputs</h2><table id="inputs" class="io"><tbody></tbody></table></div>
+    <div class="card" id="outcard"><h2 data-t>Outputs</h2>
+      <table id="outputs" class="io"><tbody></tbody></table></div>
+    <div class="card" id="unit0"><h2 data-t>Rear unit (counter 1)</h2></div>
+    <div class="card" id="unit1"><h2 data-t>Front unit (counter 2)</h2></div>
+  </div>
+</section>
+<section id="link" class="tab">
+  <div class="card"><h2 data-t>CNC link</h2><dl id="linkdata" class="grid two"></dl></div>
+  <div class="card"><h2 data-t>DNC message</h2><pre id="dnc"></pre></div>
+</section>
+<section id="ctl" class="tab"><div class="card"><h2 data-t>Controller</h2><dl id="ctldata" class="grid two"></dl></div></section>
+<section id="sensors" class="tab">
+  <div class="card">
+    <h2 data-t>Station</h2>
+    <div class="station"><canvas id="bend" width="440" height="260"></canvas><dl id="station" class="grid"></dl></div>
+    <p class="downloads"><a href="/dl/Points.txt" download>Points.txt</a> <a href="/dl/Angle.txt" download>Angle.txt</a></p>
+  </div>
+  <div class="cols">
+    <div class="card"><h2 data-t>Rear sensor</h2><canvas id="prof0" width="520" height="400"></canvas><p class="legend small"><span class="c-pts" data-t>laser points</span><span class="c-front" data-t>die flank</span><span class="c-comb" data-t>leg line</span><span class="c-ref" data-t>reference point R</span></p><dl id="sens0" class="grid"></dl></div>
+    <div class="card"><h2 data-t>Front sensor</h2><canvas id="prof1" width="520" height="400"></canvas><p class="legend small"><span class="c-pts" data-t>laser points</span><span class="c-front" data-t>die flank</span><span class="c-comb" data-t>leg line</span><span class="c-ref" data-t>reference point R</span></p><dl id="sens1" class="grid"></dl></div>
+  </div>
+</section>
+<section id="dies" class="tab">
+  <div class="card narrow">
+    <h2 data-t>Die positions</h2>
+    <table id="dietable"><thead><tr><th></th><th data-t>name</th><th class="num" data-t>rear</th><th class="num" data-t>front</th></tr></thead><tbody></tbody></table>
+    <p class="buttons">
+      <button id="die_add" data-t>add row</button>
+      <button id="die_take" data-t data-tip-title="die_take">take current positions</button>
+      <button id="die_del" data-t>delete row</button>
+    </p>
+    <p class="buttons">
+      <button id="die_save" class="primary" data-t data-tip-title="die_save">save</button>
+      <button id="die_send" data-t data-tip-title="die_send">send to controller</button>
+      <button id="die_list" data-t data-tip-title="die_list">request list from the CNC</button>
+    </p>
+  </div>
+</section>
+<section id="history" class="tab">
+  <div class="card">
+    <h2 data-t>Angle history</h2>
+    <canvas id="hist" width="1060" height="420"></canvas>
+    <p class="legend"><span class="c-rear" data-t>rear</span><span class="c-front" data-t>front</span>
+      <span class="c-comb" data-t>combined</span><span class="c-phase" data-t>phase (× 10)</span></p>
+  </div>
+</section>
+<section id="setup" class="tab">
+  <div class="card narrow">
+    <h2 data-t>Setup</h2>
+    <nav class="subtabs"><button data-sub="general" class="active" data-t>General</button><button data-sub="springback" data-t>Springback</button><button data-sub="line" data-t>Line detection</button></nav>
+    <form id="setupform">
+      <div class="sub form active" id="sub-general">
+        <span class="fl"><label for="f-mv" data-t>move method</label><span class="tip" tabindex="0" data-tip="MV_METHOD">?</span></span>
+        <select id="f-mv" name="MV_METHOD"><option>MV_REF</option><option>MV_POS</option></select>
+        <span class="fl"><label for="f-down" data-t>move down at start</label><span class="tip" tabindex="0" data-tip="MOVE_DOWN_START">?</span></span>
+        <input type="checkbox" id="f-down" name="MOVE_DOWN_START">
+        <span class="fl"><label for="f-sec" data-t>secure angle</label><span class="tip" tabindex="0" data-tip="USE_SECURE_ANGLE">?</span></span>
+        <input type="checkbox" id="f-sec" name="USE_SECURE_ANGLE">
+      </div>
+      <div class="sub form" id="sub-springback">
+        <span class="fl"><label for="f-sbt" data-t>max. measuring time in s</label><span class="tip" tabindex="0" data-tip="SB_TIMEOUT">?</span></span>
+        <input id="f-sbt" name="SB_TIMEOUT">
+        <span class="fl"><label for="f-sbm" data-t>averaging, number of tilt angles</label><span class="tip" tabindex="0" data-tip="SB_MEANTILT">?</span></span>
+        <input id="f-sbm" name="SB_MEANTILT">
+      </div>
+      <div class="sub form" id="sub-line">
+        <span class="fl"><label for="f-lm" data-t>line mode</label><span class="tip" tabindex="0" data-tip="LE_LINE_MODE">?</span></span>
+        <select id="f-lm" name="LE_LINE_MODE"><option>LM_EXTENDED</option><option>LM_STANDARD</option></select>
+        <span class="fl"><label for="f-fix" data-t>fixed number of points line 3</label><span class="tip" tabindex="0" data-tip="LE_POINTS_FIXL3">?</span></span>
+        <input id="f-fix" name="LE_POINTS_FIXL3">
+        <span class="fl"><label for="f-min" data-t>minimum number of points</label><span class="tip" tabindex="0" data-tip="LE_POINTS_MIN">?</span></span>
+        <input id="f-min" name="LE_POINTS_MIN">
+        <span class="fl"><label for="f-cov" data-t>maximum overlap in %</label><span class="tip" tabindex="0" data-tip="LE_COVER">?</span></span>
+        <input id="f-cov" name="LE_COVER">
+        <span class="fl"><label for="f-tol" data-t>tolerance in degrees</label><span class="tip" tabindex="0" data-tip="LE_TOLERANCE">?</span></span>
+        <input id="f-tol" name="LE_TOLERANCE">
+      </div>
+      <p class="buttons"><button type="submit" class="primary" data-t>OK</button><button type="button" id="setup_cancel" data-t>Cancel</button></p>
+    </form>
+    <p id="activesetup" class="muted"></p>
+  </div>
+</section>
+<section id="log" class="tab"><div class="card"><h2 data-t>Log</h2><pre id="logtext"></pre></div></section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

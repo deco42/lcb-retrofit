@@ -60,12 +60,44 @@ Machine cable DB37 -> DB37 terminal adapter -> terminals:
 
 Us (power supply) and Up (machine) stay galvanically isolated, never connect them.
 
+## Setup
+
+Fresh UNO-127: BIOS on defaults, jumper PSON1 on AT (starts with the power), Debian 13 without desktop, with SSH
+server, user `lcb` with sudo, LAN2 at a router with internet.
+
+```
+./deploy.sh setup lcb@ADDRESS   # then reboot
+./deploy.sh status              # after the reboot, every line ok
+```
+
+`setup` installs the packages (RT kernel, build tools, overlayroot), copies [`uno/`](uno/) to `/` (service, udev rule,
+network names, i915 blacklist, watchdog, journal), copies `configs/*.dat` to `/etc/lcbd` where missing, asks for the
+service page password and enables `lcbd.service`. After the reboot the UNO is at 192.168.123.74 on LAN2 only. Write
+protection after commissioning: `setup` again, answer y to overlayroot.
+
+## Deploy
+
+```
+./deploy.sh [USER@HOST]            # default lcb@192.168.123.74
+./deploy.sh rollback [USER@HOST]   # previous lcbd and lcb_test back
+```
+
+1. Downloads the SOEM archive once on the PC (the UNO has no internet).
+2. Builds the committed state on the UNO and runs the tests (`nice 19`, lcbd keeps running).
+3. Asks before the restart, installs `lcbd` and `lcb_test` live and on the eMMC below the overlayroot, keeps the
+   previous ones as `*.prev`.
+4. Restarts lcbd and checks for 30 s that the new binary runs without a restart, otherwise the previous binaries come
+   back.
+
 ## Folders
 
 | Folder | Content |
 |---|---|
 | [`lcbd/`](lcbd/) | source, tests, service page |
 | [`configs/`](configs/) | example `setup.dat`, `sensor.dat`, `die.dat` |
+| [`uno/`](uno/) | system files of the UNO, copied to `/` by `deploy.sh setup` |
 | [`testdata/`](testdata/) | CNC link test vectors |
 | [`3d-prints/`](3d-prints/) | DB37 adapter holder and DIN rail end cap (OpenSCAD + STL) |
 | [`docs/`](docs/) | cabinet layout |
+
+License: [MIT](LICENSE). `lcbd` links SOEM (GPLv3).

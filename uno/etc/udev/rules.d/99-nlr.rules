@@ -1,0 +1,4 @@
+# FTDI FT232R to Cybelec COM1
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="ttyNLR"
+# FTDI default 16 ms, the NLR link is tested with 1 ms
+ACTION=="add", SUBSYSTEM=="usb-serial", DRIVER=="ftdi_sio", ATTR{latency_timer}="1"

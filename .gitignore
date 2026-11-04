@@ -229,3 +229,6 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/c,python
+
+# system files of the UNO, *.d above would hide rules.d, sysctl.d and the others
+!uno/**

@@ -1,0 +1,6 @@
+# LAN1 of the UNO-127, by slot and not by MAC, so a disk image also runs on a spare UNO-127
+[Match]
+Path=pci-0000:01:00.0
+
+[Link]
+Name=ecat0

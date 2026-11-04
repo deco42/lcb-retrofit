@@ -1,0 +1,9 @@
+# switch A91, sensors .248 rear and .249 front
+auto sens0
+iface sens0 inet static
+    address 192.168.123.74/24
+
+# EtherCAT, no IP
+auto ecat0
+iface ecat0 inet manual
+    up ip link set ecat0 up

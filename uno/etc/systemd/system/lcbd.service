@@ -1,0 +1,17 @@
+[Unit]
+Description=LCB retrofit angle measurement (lcbd)
+
+[Service]
+# root for EtherCAT (raw socket) and real-time priority
+ExecStart=/usr/local/bin/lcbd --ecat ecat0 --com /dev/ttyNLR
+# EtherCAT lost or crash: restart after 2 s, like power-cycling via F90
+Restart=always
+RestartSec=2
+# a thread stops reporting: systemd kills lcbd after 15 s and restarts it
+WatchdogSec=15
+TimeoutAbortSec=5
+LimitRTPRIO=99
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

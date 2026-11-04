@@ -22,7 +22,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 option(LCBD_SANITIZE "build with -fsanitize=address,undefined" OFF)
 
 add_compile_options(-Wall -Wextra -Wpedantic -ffp-contract=off)
-add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_GNU_SOURCE VERSION="${PROJECT_VERSION}")
 if(LCBD_SANITIZE)
     add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined)
     add_link_options(-fsanitize=address,undefined)

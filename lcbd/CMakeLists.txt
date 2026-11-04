@@ -5,6 +5,16 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
+include(FetchContent)
+if(NOT SOEM_URL)
+    set(SOEM_URL https://github.com/OpenEtherCATsociety/SOEM/archive/refs/tags/v2.0.1.tar.gz)
+endif()
+FetchContent_Declare(soem
+    URL ${SOEM_URL}
+    URL_HASH SHA256=933208261f1737ae530d25b915c1ce459413dcdba13d92e95af3726380601648
+    EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(soem)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -34,6 +44,10 @@ add_library(lcbcore STATIC
 
 target_include_directories(lcbcore PUBLIC src)
 target_link_libraries(lcbcore PUBLIC m)
+
+add_library(lcbecat STATIC src/ecat.c)
+target_include_directories(lcbecat PUBLIC src)
+target_link_libraries(lcbecat PRIVATE soem PUBLIC Threads::Threads)
 
 # tests
 enable_testing()
